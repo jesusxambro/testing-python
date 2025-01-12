@@ -1,32 +1,17 @@
 version: 2.1
-
+orbs:
+  python: circleci/python:3.9-slim-buster
 jobs:
-  build:
-    docker:
-      - image: circleci/python:3.9-slim-buster
-
+  build_and_test: # this can be any name you choose
+    executor: python/default # use the default executor defined within the orb
     steps:
-      - checkout
-
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            - v1-dependencies-
-
-      - run:
-          name: Install dependencies
-          command: |
-            python -m venv .venv
-            source .venv/bin/activate
-            pip install -r requirements.txt 
-
-      - save_cache:
-          paths:
-            - ./.venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-
+      - checkout # checkout source code
+      - python/install-packages:
+          pkg-manager: pip
       - run:
           name: Run tests
-          command: |
-            source .venv/bin/activate
-            pytest
+          command: python -m pytest
+workflows:
+  build_test_deploy:
+    jobs:
+      - build_and_test
